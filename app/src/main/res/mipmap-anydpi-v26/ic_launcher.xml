@@ -1,0 +1,22 @@
+package com.pradeep2178.localbookreader.data
+
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
+
+class BookLibraryViewModel(application: Application) : AndroidViewModel(application) {
+    private val repository = BookRepository(application)
+
+    private val _books = MutableStateFlow<List<BookEntity>>(emptyList())
+    val books: StateFlow<List<BookEntity>> = repository.observeBooks()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    suspend fun addBook(title: String, fileUri: String) {
+        repository.addBook(title, fileUri)
+        repository.enqueueIndexing(fileUri)
+    }
+}
